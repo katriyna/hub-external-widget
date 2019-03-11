@@ -1,11 +1,15 @@
 import Auth from '@jetbrains/ring-ui/components/auth/auth';
 import showAuthDialog from '@jetbrains/ring-ui/components/auth-dialog-service/auth-dialog-service';
 import HTTP from '@jetbrains/ring-ui/components/http/http';
+import '@jetbrains/ring-ui/components/global/variables.css';
 import Websandbox from 'websandbox';
 
 export function init(installationProperties, config) {
 
   var SERVICE_FIELDS = 'id,name,applicationName,homeUrl,version';
+
+  var DEFAULT_WIDTH = 290;
+  var DEFAULT_HEIGHT = 265;
 
   var hubConfig = {
     reloadOnUserChange: false,
@@ -84,10 +88,25 @@ export function init(installationProperties, config) {
       removeWidget: () => undefined
     };
 
-    Websandbox.create(dashboardApi, {
+    return Websandbox.create(dashboardApi, {
+      frameClassName: 'standalone-widget',
+      frameStyle: getFrameStyle(
+        installationProperties.width || DEFAULT_WIDTH,
+        installationProperties.height || DEFAULT_HEIGHT
+      ),
       frameContainer: installationProperties.domContainer,
       frameSrc: `${installationProperties.hubBaseUrl}/api/rest/widgets/${installationProperties.widgetName}/archive/index.html?locale=${installationProperties.locale}&editable=false`,
       sandboxAdditionalAttributes: 'allow-scripts allow-pointer-lock allow-top-navigation'
     });
+
+    function getFrameStyle(width, height) {
+      return [
+        'width: ', width, 'px;',
+        'height: ', height, 'px;',
+        'border: 1px solid var(--ring-borders-color);',
+        'border-radius: var(--ring-border-radius);',
+        'padding: 1px 0;'
+      ].join('');
+    }
   });
 };
