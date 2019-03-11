@@ -6,12 +6,11 @@ import Websandbox from 'websandbox';
 
 export function init(installationProperties, config) {
 
-  var SERVICE_FIELDS = 'id,name,applicationName,homeUrl,version';
+  const SERVICE_FIELDS = 'id,name,applicationName,homeUrl,version';
+  const DEFAULT_WIDTH = 290;
+  const DEFAULT_HEIGHT = 265;
 
-  var DEFAULT_WIDTH = 290;
-  var DEFAULT_HEIGHT = 265;
-
-  var hubConfig = {
+  const hubConfig = {
     reloadOnUserChange: false,
     embeddedLogin: true,
     serverUri: installationProperties.hubBaseUrl,
@@ -21,45 +20,62 @@ export function init(installationProperties, config) {
     redirectUri: `${window.location.origin}/`
   };
 
-  var auth = new Auth(hubConfig);
+  const auth = new Auth(hubConfig);
   auth.setAuthDialogService(showAuthDialog);
 
-  var http = new HTTP(auth, null, {
+  const http = new HTTP(auth, null, {
     headers: {
       'Hub-API-Version': 3
     }
   });
 
-  var fetchHub = async (relativeURL, requestParams) =>
-    await http.request(
+  let services;
+
+  return auth.init().then(() =>
+    Websandbox.create(getDashboardApi(), {
+      frameClassName: 'standalone-widget',
+      frameStyle: getFrameStyle(
+        installationProperties.width || DEFAULT_WIDTH,
+        installationProperties.height || DEFAULT_HEIGHT
+      ),
+      frameContainer: installationProperties.domContainer,
+      frameSrc: `${installationProperties.hubBaseUrl}/api/rest/widgets/${installationProperties.widgetName}/archive/index.html?locale=${installationProperties.locale}&editable=false`,
+      sandboxAdditionalAttributes: 'allow-scripts allow-pointer-lock allow-top-navigation'
+    })
+  );
+
+  /*--- End of script, functions declarations ---*/
+
+  async function fetchHub(relativeURL, requestParams) {
+    return await http.request(
       `${hubConfig.serverUri}/${relativeURL}`, requestParams
     );
+  }
 
-  var services;
-  var loadServices = async applicationName => {
+  async function loadServices(applicationName) {
     if (!services) {
-      var data = await fetchHub(`api/rest/services?fields=${SERVICE_FIELDS}`);
+      const data = await fetchHub(`api/rest/services?fields=${SERVICE_FIELDS}`);
       services = data && data.services;
     }
     return services.filter(service =>
       (!applicationName || service.applicationName === applicationName) &&
       service.homeUrl
     );
-  };
+  }
 
-  var fetch = async (serviceId, relativeURL, requestParams) => {
-    var loadedServices = await loadServices();
-    var currentService = (loadedServices || []).filter(
+  async function fetch(serviceId, relativeURL, requestParams) {
+    const loadedServices = await loadServices();
+    const currentService = (loadedServices || []).filter(
       service => service.id === serviceId
     )[0];
     if (!currentService) {
       throw new Error(`Could not find service with ID "${serviceId}". Make sure it is requested in widget's manifest.`);
     }
-    return http.request(`${currentService.homeUrl}/${relativeURL}`, requestParams);
-  };
+    return await http.request(`${currentService.homeUrl}/${relativeURL}`, requestParams);
+  }
 
-  auth.init().then(function() {
-    var dashboardApi = {
+  function getDashboardApi() {
+    return {
       setTitle: () => undefined,
       setLoadingAnimationEnabled: () => undefined,
 
@@ -71,12 +87,12 @@ export function init(installationProperties, config) {
 
       readCache: async () => {},
       storeCache: async () => {
-        throw new Error('Widget is in read-only mode');
+        throw new Error('Cannot store cache for widget is in read-only mode');
       },
 
       readConfig: async () => config,
       storeConfig: async () => {
-        throw new Error('Widget is in read-only mode');
+        throw new Error('Cannot store config for widget in read-only mode');
       },
 
       fetch,
@@ -85,28 +101,19 @@ export function init(installationProperties, config) {
       loadServices,
 
       alert: () => undefined,
-      removeWidget: () => undefined
+      removeWidget: () => {
+        throw new Error('Cannot remove widget in read-only mode');
+      }
     };
+  }
 
-    return Websandbox.create(dashboardApi, {
-      frameClassName: 'standalone-widget',
-      frameStyle: getFrameStyle(
-        installationProperties.width || DEFAULT_WIDTH,
-        installationProperties.height || DEFAULT_HEIGHT
-      ),
-      frameContainer: installationProperties.domContainer,
-      frameSrc: `${installationProperties.hubBaseUrl}/api/rest/widgets/${installationProperties.widgetName}/archive/index.html?locale=${installationProperties.locale}&editable=false`,
-      sandboxAdditionalAttributes: 'allow-scripts allow-pointer-lock allow-top-navigation'
-    });
-
-    function getFrameStyle(width, height) {
-      return [
-        'width: ', width, 'px;',
-        'height: ', height, 'px;',
-        'border: 1px solid var(--ring-borders-color);',
-        'border-radius: var(--ring-border-radius);',
-        'padding: 1px 0;'
-      ].join('');
-    }
-  });
-};
+  function getFrameStyle(width, height) {
+    return [
+      'width: ', width, 'px;',
+      'height: ', height, 'px;',
+      'border: 1px solid var(--ring-borders-color);',
+      'border-radius: var(--ring-border-radius);',
+      'padding: 1px 0;'
+    ].join('');
+  }
+}
