@@ -7,6 +7,28 @@
 
 .widgetTitle {
   width: 100%;
+
+  color: var(--ring-text-color);
+
+  font-family: var(--ring-font-family);
+  font-size: var(--ring-font-size);
+  font-weight: 600;
+}
+
+.widgetTitleText {
+  overflow: hidden;
+
+  max-width: 100%;
+  height: 16px;
+
+  margin: 0 12px;
+  padding: 8px 0 6px;
+
+  cursor: default;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  border-bottom: 1px solid var(--ring-line-color);
 }
 
 .widgetBody {

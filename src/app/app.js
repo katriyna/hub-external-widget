@@ -1,6 +1,7 @@
 import Auth from '@jetbrains/ring-ui/components/auth/auth';
 import showAuthDialog from '@jetbrains/ring-ui/components/auth-dialog-service/auth-dialog-service';
 import HTTP from '@jetbrains/ring-ui/components/http/http';
+import linkStyles from '@jetbrains/ring-ui/components/link/link.css';
 import Websandbox from 'websandbox';
 
 import style from './style.css';
@@ -38,7 +39,7 @@ export function init(installationProperties, config) {
       installationProperties.width || DEFAULT_WIDTH,
       installationProperties.height || DEFAULT_HEIGHT
     );
-    titleNode = container.querySelector(`.${style.widgetTitle}`);
+    titleNode = container.querySelector(`.${style.widgetTitleText}`);
     installationProperties.domContainer.appendChild(container);
 
     return Websandbox.create(getDashboardApi(), {
@@ -81,8 +82,17 @@ export function init(installationProperties, config) {
 
   function getDashboardApi() {
     return {
-      setTitle: text => {
-        if (titleNode) {
+      setTitle: (text, url) => {
+        titleNode.innerHTML = '';
+
+        if (url) {
+          const link = window.document.createElement('a');
+          link.href = url;
+          link.target = '_blank';
+          link.innerText = text;
+          link.className = linkStyles.link;
+          titleNode.appendChild(link);
+        } else {
           titleNode.innerText = text;
         }
       },
@@ -125,6 +135,9 @@ export function init(installationProperties, config) {
     container.style.width = `${width}px`;
 
     const title = createEmptyDiv(style.widgetTitle);
+    const titleText = createEmptyDiv(style.widgetTitleText);
+    title.appendChild(titleText);
+
     const body = createEmptyDiv(style.widgetBody);
     body.style.height = `${height}px`;
     container.appendChild(title);
