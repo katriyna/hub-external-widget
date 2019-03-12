@@ -88,20 +88,24 @@ export function init(installationProperties, config) {
       },
       setLoadingAnimationEnabled: () => undefined,
 
-      enterConfigMode: () => undefined,
-      exitConfigMode: () => undefined,
+      enterConfigMode: () => {
+        throw new Error('EnterConfigMode: Cannot manipulate with settings for widget is in read-only mode');
+      },
+      exitConfigMode: () => {
+        throw new Error('ExitConfigMode: Cannot manipulate with settings for widget is in read-only mode');
+      },
 
       setError: () => undefined,
       clearError: () => undefined,
 
       readCache: async () => {},
       storeCache: async () => {
-        throw new Error('Cannot store cache for widget is in read-only mode');
+        throw new Error('StoreCache: Cannot store cache for widget is in read-only mode');
       },
 
       readConfig: async () => config,
       storeConfig: async () => {
-        throw new Error('Cannot store config for widget in read-only mode');
+        throw new Error('StoreConfig: Cannot store config for widget in read-only mode');
       },
 
       fetch,
@@ -111,7 +115,7 @@ export function init(installationProperties, config) {
 
       alert: () => undefined,
       removeWidget: () => {
-        throw new Error('Cannot remove widget in read-only mode');
+        throw new Error('RemoveWidget: Cannot remove widget in read-only mode');
       }
     };
   }
