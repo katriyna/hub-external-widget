@@ -1,8 +1,9 @@
 import Auth from '@jetbrains/ring-ui/components/auth/auth';
 import showAuthDialog from '@jetbrains/ring-ui/components/auth-dialog-service/auth-dialog-service';
 import HTTP from '@jetbrains/ring-ui/components/http/http';
-import '@jetbrains/ring-ui/components/global/variables.css';
 import Websandbox from 'websandbox';
+
+import style from './style.css';
 
 export function init(installationProperties, config) {
 
@@ -31,18 +32,20 @@ export function init(installationProperties, config) {
 
   let services;
 
-  return auth.init().then(() =>
-    Websandbox.create(getDashboardApi(), {
-      frameClassName: 'standalone-widget',
-      frameStyle: getFrameStyle(
-        installationProperties.width || DEFAULT_WIDTH,
-        installationProperties.height || DEFAULT_HEIGHT
-      ),
-      frameContainer: installationProperties.domContainer,
+  return auth.init().then(() => {
+    const container = createWidgetsIFrameContainer(
+      installationProperties.width || DEFAULT_WIDTH,
+      installationProperties.height || DEFAULT_HEIGHT
+    );
+    installationProperties.domContainer.appendChild(container);
+
+    return Websandbox.create(getDashboardApi(), {
+      frameClassName: style.widgetFrame,
+      frameContainer: container.querySelector(`.${style.widgetBody}`),
       frameSrc: `${installationProperties.hubBaseUrl}/api/rest/widgets/${installationProperties.widgetName}/archive/index.html?locale=${installationProperties.locale}&editable=false`,
       sandboxAdditionalAttributes: 'allow-scripts allow-pointer-lock allow-top-navigation'
-    })
-  );
+    });
+  });
 
   /*--- End of script, functions declarations ---*/
 
@@ -107,13 +110,22 @@ export function init(installationProperties, config) {
     };
   }
 
-  function getFrameStyle(width, height) {
-    return [
-      'width: ', width, 'px;',
-      'height: ', height, 'px;',
-      'border: 1px solid var(--ring-borders-color);',
-      'border-radius: var(--ring-border-radius);',
-      'padding: 1px 0;'
-    ].join('');
+  function createWidgetsIFrameContainer(width, height) {
+    const container = createEmptyDiv(style.widgetWrapper);
+    container.style.width = `${width}px`;
+    container.style.height = `${height}px`;
+
+    const title = createEmptyDiv(style.widgetTitle);
+    const body = createEmptyDiv(style.widgetBody);
+    container.appendChild(title);
+    container.appendChild(body);
+
+    return container;
+
+    function createEmptyDiv(className) {
+      const node = window.document.createElement('div');
+      node.className = className;
+      return node;
+    }
   }
 }

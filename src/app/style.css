@@ -1,0 +1,21 @@
+@import "@jetbrains/ring-ui/components/global/variables.css";
+
+.widgetWrapper {
+  border: 1px solid var(--ring-borders-color);
+  border-radius: var(--ring-border-radius);
+}
+
+.widgetTitle {
+  width: 100%;
+}
+
+.widgetBody {
+  width: 100%;
+}
+
+.widgetFrame {
+  width: 100%;
+  height: 100%;
+
+  border: none;
+}
