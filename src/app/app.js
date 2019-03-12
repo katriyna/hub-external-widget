@@ -31,12 +31,14 @@ export function init(installationProperties, config) {
   });
 
   let services;
+  let titleNode;
 
   return auth.init().then(() => {
     const container = createWidgetsIFrameContainer(
       installationProperties.width || DEFAULT_WIDTH,
       installationProperties.height || DEFAULT_HEIGHT
     );
+    titleNode = container.querySelector(`.${style.widgetTitle}`);
     installationProperties.domContainer.appendChild(container);
 
     return Websandbox.create(getDashboardApi(), {
@@ -79,7 +81,11 @@ export function init(installationProperties, config) {
 
   function getDashboardApi() {
     return {
-      setTitle: () => undefined,
+      setTitle: text => {
+        if (titleNode) {
+          titleNode.innerText = text;
+        }
+      },
       setLoadingAnimationEnabled: () => undefined,
 
       enterConfigMode: () => undefined,
@@ -113,10 +119,10 @@ export function init(installationProperties, config) {
   function createWidgetsIFrameContainer(width, height) {
     const container = createEmptyDiv(style.widgetWrapper);
     container.style.width = `${width}px`;
-    container.style.height = `${height}px`;
 
     const title = createEmptyDiv(style.widgetTitle);
     const body = createEmptyDiv(style.widgetBody);
+    body.style.height = `${height}px`;
     container.appendChild(title);
     container.appendChild(body);
 
