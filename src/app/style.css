@@ -1,6 +1,8 @@
 @import "@jetbrains/ring-ui/components/global/variables.css";
 
 .widgetWrapper {
+  position: relative;
+
   border: 1px solid var(--ring-borders-color);
   border-radius: var(--ring-border-radius);
 }
@@ -40,4 +42,47 @@
   height: 100%;
 
   border: none;
+}
+
+.widgetLoader {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  display: none;
+  overflow: hidden;
+}
+
+.widgetWrapperLoading .widgetLoader {
+  display: block;
+}
+
+@value loaderWidth: 64px;
+
+.widgetLoader::before {
+  display: block;
+
+  width: calc(100% + loaderWidth);
+  height: 100%;
+
+  content: '';
+  animation: progress 1s linear infinite;
+
+  opacity: 0.2;
+
+  background: linear-gradient(to right, transparent, var(--ring-line-color) 40%, transparent 80%) repeat;
+  background-size: loaderWidth;
+}
+
+@keyframes progress {
+  from {
+    transform: translateX(calc(0 - loaderWidth));
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }

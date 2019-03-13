@@ -33,18 +33,19 @@ export function init(installationProperties, config) {
 
   let services;
   let titleNode;
+  let containerNode;
 
   return auth.init().then(() => {
-    const container = createWidgetsIFrameContainer(
+    containerNode = createWidgetsIFrameContainer(
       installationProperties.width || DEFAULT_WIDTH,
       installationProperties.height || DEFAULT_HEIGHT
     );
-    titleNode = container.querySelector(`.${style.widgetTitleText}`);
-    installationProperties.domContainer.appendChild(container);
+    titleNode = containerNode.querySelector(`.${style.widgetTitleText}`);
+    installationProperties.domContainer.appendChild(containerNode);
 
     return Websandbox.create(getDashboardApi(), {
       frameClassName: style.widgetFrame,
-      frameContainer: container.querySelector(`.${style.widgetBody}`),
+      frameContainer: containerNode.querySelector(`.${style.widgetBody}`),
       frameSrc: `${installationProperties.hubBaseUrl}/api/rest/widgets/${installationProperties.widgetName}/archive/index.html?locale=${installationProperties.locale}&editable=false`,
       sandboxAdditionalAttributes: 'allow-scripts allow-pointer-lock allow-top-navigation'
     });
@@ -96,7 +97,12 @@ export function init(installationProperties, config) {
           titleNode.innerText = text;
         }
       },
-      setLoadingAnimationEnabled: () => undefined,
+
+      setLoadingAnimationEnabled: isLoading => {
+        containerNode.className = isLoading
+          ? [style.widgetWrapper, style.widgetWrapperLoading].join(' ')
+          : style.widgetWrapper;
+      },
 
       enterConfigMode: () => {
         throw new Error('EnterConfigMode: Cannot manipulate with settings for widget is in read-only mode');
@@ -142,6 +148,7 @@ export function init(installationProperties, config) {
     body.style.height = `${height}px`;
     container.appendChild(title);
     container.appendChild(body);
+    container.appendChild(createEmptyDiv(style.widgetLoader));
 
     return container;
 
