@@ -1,5 +1,4 @@
 import Auth from '@jetbrains/ring-ui/components/auth/auth';
-import showAuthDialog from '@jetbrains/ring-ui/components/auth-dialog-service/auth-dialog-service';
 import HTTP from '@jetbrains/ring-ui/components/http/http';
 import linkStyles from '@jetbrains/ring-ui/components/link/link.css';
 import Websandbox from 'websandbox';
@@ -23,8 +22,6 @@ export function init(installationProperties, config) {
   };
 
   const auth = new Auth(hubConfig);
-  auth.setAuthDialogService(showAuthDialog);
-
   const http = new HTTP(auth, null, {
     headers: {
       'Hub-API-Version': 3
