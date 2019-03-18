@@ -28,7 +28,7 @@ const webpackConfig = () => ({
     filename: '[name].js',
     devtoolModuleFilenameTemplate: '[absolute-resource-path]',
     library: ['HubStandaloneWidget'],
-    libraryTarget: 'umd',
+    libraryTarget: 'umd'
   },
   module: {
     rules: [
