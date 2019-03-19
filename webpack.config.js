@@ -25,9 +25,9 @@ const webpackConfig = () => ({
   },
   output: {
     path: resolve(__dirname, pkgConfig.dist),
-    filename: '[name].js',
+    filename: 'hub-external-widget.js',
     devtoolModuleFilenameTemplate: '[absolute-resource-path]',
-    library: ['HubStandaloneWidget'],
+    library: ['HubExternalWidget'],
     libraryTarget: 'umd'
   },
   module: {

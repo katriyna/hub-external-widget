@@ -1,7 +1,15 @@
 {
   "name": "external-widget",
   "version": "1.0.0",
-  "private": true,
+  "author": "Ekaterina Zaikina",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "Hub",
+    "Dashboard",
+    "Widget"
+  ],
   "config": {
     "components": "./src",
     "dist": "./dist"
