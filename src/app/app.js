@@ -17,8 +17,8 @@ export function init(installationProperties, config) {
     serverUri: installationProperties.hubBaseUrl,
     clientId: installationProperties.authClientId || '0-0-0-0-0',
     scope: [installationProperties.authClientId || '0-0-0-0-0'],
-    requestCredentials: 'silent',
-    redirectUri: `${window.location.origin}/`
+    requestCredentials: 'skip',
+    redirectUri: window.location.href
   };
 
   const auth = new Auth(hubConfig);
