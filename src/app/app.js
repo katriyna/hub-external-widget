@@ -18,7 +18,8 @@ export function init(installationProperties, config) {
     clientId: installationProperties.authClientId || '0-0-0-0-0',
     scope: [installationProperties.authClientId || '0-0-0-0-0'],
     requestCredentials: 'skip',
-    redirectUri: window.location.href
+    redirectUri: installationProperties.redirectUri ||
+      `${window.location.origin}${window.location.pathname}`
   };
 
   const auth = new Auth(hubConfig);
@@ -102,19 +103,17 @@ export function init(installationProperties, config) {
       },
 
       enterConfigMode: () => {
-        throw new Error('EnterConfigMode: Cannot manipulate with settings for widget is in read-only mode');
+        throw new Error('EnterConfigMode: Cannot manipulate with settings for widget in read-only mode');
       },
       exitConfigMode: () => {
-        throw new Error('ExitConfigMode: Cannot manipulate with settings for widget is in read-only mode');
+        throw new Error('ExitConfigMode: Cannot manipulate with settings for widget in read-only mode');
       },
 
       setError: () => undefined,
       clearError: () => undefined,
 
-      readCache: async () => {},
-      storeCache: async () => {
-        throw new Error('StoreCache: Cannot store cache for widget is in read-only mode');
-      },
+      readCache: async () => undefined,
+      storeCache: async () => undefined,
 
       readConfig: async () => config,
       storeConfig: async () => {
