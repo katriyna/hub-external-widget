@@ -39,7 +39,10 @@ export function init(installationProperties, config) {
       installationProperties.height || DEFAULT_HEIGHT
     );
     titleNode = containerNode.querySelector(`.${style.widgetTitleText}`);
-    installationProperties.domContainer.appendChild(containerNode);
+    const domContainer = typeof installationProperties.domContainer === 'string'
+      ? document.querySelector(installationProperties.domContainer)
+      : installationProperties.domContainer;
+    domContainer.appendChild(containerNode);
 
     return Websandbox.create(getDashboardApi(), {
       frameClassName: style.widgetFrame,
