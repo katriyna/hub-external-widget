@@ -5,25 +5,29 @@ import Websandbox from 'websandbox';
 
 import style from './style.css';
 
+let hubConfig;
+let auth;
+let http;
+
 export function init(installationProperties, config) {
 
   const SERVICE_FIELDS = 'id,name,applicationName,homeUrl,version';
   const DEFAULT_WIDTH = 290;
   const DEFAULT_HEIGHT = 265;
 
-  const hubConfig = {
-    reloadOnUserChange: false,
-    embeddedLogin: true,
-    serverUri: installationProperties.hubBaseUrl,
-    clientId: installationProperties.authClientId || '0-0-0-0-0',
-    scope: [installationProperties.authClientId || '0-0-0-0-0'],
-    requestCredentials: 'skip',
-    redirectUri: installationProperties.redirectUri ||
-      `${window.location.origin}${window.location.pathname}`
-  };
+  if (hubConfig) {
+    const newHubConfig = makeHubConfig(installationProperties);
+    const nonMatchingMessage =
+      getNonMatchingPropertyError(newHubConfig, hubConfig);
+    if (nonMatchingMessage) {
+      throw new Error(nonMatchingMessage);
+    }
+  } else {
+    hubConfig = makeHubConfig(installationProperties);
+  }
 
-  const auth = new Auth(hubConfig);
-  const http = new HTTP(auth, null, {
+  auth = auth || new Auth(hubConfig);
+  http = http || new HTTP(auth, null, {
     headers: {
       'Hub-API-Version': 3
     }
@@ -33,7 +37,45 @@ export function init(installationProperties, config) {
   let titleNode;
   let containerNode;
 
-  return auth.init().then(() => {
+  return auth.init().then(renderWidgetNode);
+
+  /*--- End of script, functions declarations ---*/
+
+  function getNonMatchingPropertyError(oldHubConfig, currentHubConfig) {
+    if (oldHubConfig.serverUri !== currentHubConfig.serverUri) {
+      return getErrorMessageForNonMatchingProperty(
+        'serverUri', oldHubConfig.serverUri, currentHubConfig.serverUri
+      );
+    }
+    if (oldHubConfig.clientId !== currentHubConfig.clientId) {
+      return getErrorMessageForNonMatchingProperty(
+        'clientId', oldHubConfig.clientId, currentHubConfig.clientId
+      );
+    }
+    if (oldHubConfig.redirectUri !== currentHubConfig.redirectUri) {
+      return getErrorMessageForNonMatchingProperty(
+        'redirectUri', oldHubConfig.redirectUri, currentHubConfig.redirectUri
+      );
+    }
+    if (oldHubConfig.scope[0] !== currentHubConfig.scope[0]) {
+      return getErrorMessageForNonMatchingProperty(
+        'oldHubConfig.scope', oldHubConfig.scope[0], currentHubConfig.scope[0]
+      );
+    }
+    return null;
+
+
+    function getErrorMessageForNonMatchingProperty(
+      propertyName, prevValue, currentValue
+    ) {
+      let errorMessage = `Error for widget "${installationProperties.widgetName}": All external hub widgets on a one page should be referenced to the same HUB and request same scope.`;
+      errorMessage += ` But property "${propertyName}" is different with previously initialized widget: prev value = ${prevValue}; new value = ${currentValue}`;
+      return errorMessage;
+    }
+  }
+
+
+  function renderWidgetNode() {
     containerNode = createWidgetsIFrameContainer(
       installationProperties.width || DEFAULT_WIDTH,
       installationProperties.height || DEFAULT_HEIGHT
@@ -50,9 +92,19 @@ export function init(installationProperties, config) {
       frameSrc: `${installationProperties.hubBaseUrl}/api/rest/widgets/${installationProperties.widgetName}/archive/index.html?locale=${installationProperties.locale}&editable=false`,
       sandboxAdditionalAttributes: 'allow-scripts allow-pointer-lock allow-top-navigation'
     });
-  });
+  }
 
-  /*--- End of script, functions declarations ---*/
+  function makeHubConfig(installationProps) {
+    return {
+      reloadOnUserChange: false,
+      embeddedLogin: true,
+      serverUri: installationProps.hubBaseUrl,
+      clientId: installationProps.authClientId || '0-0-0-0-0',
+      scope: [installationProps.authClientId || '0-0-0-0-0'],
+      requestCredentials: 'skip',
+      redirectUri: installationProps.redirectUri || `${window.location.origin}${window.location.pathname}`
+    };
+  }
 
   async function fetchHub(relativeURL, requestParams) {
     return await http.request(
