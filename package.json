@@ -1,6 +1,6 @@
 {
   "name": "hub-externally-embedded-widget",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Ekaterina Zaikina <katriyna@gmail.com>",
   "files": [
     "dist"
