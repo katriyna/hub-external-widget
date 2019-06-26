@@ -77,6 +77,21 @@
   background-size: loaderWidth;
 }
 
+.widgetAlertCaption {
+  color: var(--ring-dark-text-color);
+  background-color: var(--ring-message-background-color);
+
+  font-family: var(--ring-font-family);
+  font-size: var(--ring-font-size);
+  font-weight: 600;
+}
+
+.widgetAlertIcon {
+  margin-top: 15px;
+
+  vertical-align: top;
+}
+
 @keyframes progress {
   from {
     transform: translateX(calc(0 - loaderWidth));

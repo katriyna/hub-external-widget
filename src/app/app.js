@@ -1,13 +1,21 @@
 import Auth from '@jetbrains/ring-ui/components/auth/auth';
 import HTTP from '@jetbrains/ring-ui/components/http/http';
 import linkStyles from '@jetbrains/ring-ui/components/link/link.css';
+import alertStyles from '@jetbrains/ring-ui/components/alert/alert.css';
+import alertContainerStyles from '@jetbrains/ring-ui/components/alert/container.css';
+import iconStyles from '@jetbrains/ring-ui/components/icon/icon.css';
+import classNames from 'classnames';
 import Websandbox from 'websandbox';
+import CheckmarkIcon from '@jetbrains/icons/checkmark.svg';
+import WarningIcon from '@jetbrains/icons/warning.svg';
+import ExceptionIcon from '@jetbrains/icons/exception.svg';
 
 import style from './style.css';
 
 let hubConfig;
 let auth;
 let http;
+let alertContainerNode;
 
 export function init(installationProperties, config) {
 
@@ -32,6 +40,7 @@ export function init(installationProperties, config) {
       'Hub-API-Version': 3
     }
   });
+  alertContainerNode = alertContainerNode || createAlertContainerNode();
 
   let services;
   let titleNode;
@@ -158,10 +167,10 @@ export function init(installationProperties, config) {
       },
 
       enterConfigMode: () => {
-        throw new Error('EnterConfigMode: Cannot manipulate with settings for widget in read-only mode');
+        alert('EnterConfigMode: Cannot manipulate with settings for widget in read-only mode', 'warning');
       },
       exitConfigMode: () => {
-        throw new Error('ExitConfigMode: Cannot manipulate with settings for widget in read-only mode');
+        alert('ExitConfigMode: Cannot manipulate with settings for widget in read-only mode', 'warning');
       },
 
       setError: () => undefined,
@@ -172,7 +181,7 @@ export function init(installationProperties, config) {
 
       readConfig: async () => config,
       storeConfig: async () => {
-        throw new Error('StoreConfig: Cannot store config for widget in read-only mode');
+        alert('StoreConfig: Cannot store config for widget in read-only mode', 'warning');
       },
 
       fetch,
@@ -180,9 +189,9 @@ export function init(installationProperties, config) {
 
       loadServices,
 
-      alert: () => undefined,
+      alert,
       removeWidget: () => {
-        throw new Error('RemoveWidget: Cannot remove widget in read-only mode');
+        alert('RemoveWidget: Cannot remove widget in read-only mode', 'warning');
       }
     };
   }
@@ -208,5 +217,57 @@ export function init(installationProperties, config) {
       node.className = className;
       return node;
     }
+  }
+
+  function createAlertContainerNode() {
+    const alertContainer = window.document.createElement('div');
+    alertContainer.className = classNames(
+      alertContainerStyles.alertContainer
+    );
+
+    document.body.appendChild(alertContainer);
+    return alertContainer;
+  }
+
+  function alert(text, type, displayTimeout) {
+    const alertNode = window.document.createElement('div');
+    alertNode.className = classNames({
+      [alertStyles.alert]: true,
+      [alertContainerStyles.alertInContainer]: true,
+      [alertStyles.error]: type === 'error'
+    });
+    const alertNodeLabel = window.document.createElement('span');
+    alertNodeLabel.className = classNames(
+      alertStyles.caption, style.widgetAlertCaption
+    );
+    alertNodeLabel.innerText = text;
+
+    if (type === 'warning' || type === 'error' || type === 'success') {
+      const iconNode = window.document.createElement('span');
+      iconNode.className = classNames(
+        alertStyles.icon,
+        iconStyles.glyph,
+        iconStyles.icon,
+        style.widgetAlertIcon, {
+          [iconStyles.green]: type === 'success',
+          [iconStyles.red]: type === 'error',
+          [iconStyles.gray]: type === 'warning'
+        }
+      );
+      iconNode.innerHTML = {
+        warning: WarningIcon,
+        error: ExceptionIcon,
+        success: CheckmarkIcon
+      }[type];
+
+      alertNode.append(iconNode);
+    }
+    alertNode.append(alertNodeLabel);
+    alertContainerNode.append(alertNode);
+
+    const defaultDisplayTimeout = 3000;
+    setInterval(() => {
+      alertNode.className += ` ${alertStyles.animationClosing}`;
+    }, displayTimeout || defaultDisplayTimeout);
   }
 }
