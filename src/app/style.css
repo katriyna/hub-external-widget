@@ -27,7 +27,22 @@
 .widgetError svg {
   fill: var(--ring-icon-error-color);
 
+  width: 14px;
+  height: 14px;
+
   color: var(--ring-icon-error-color);
+}
+
+.widgetLogo {
+  position: relative;
+  top: 3px;
+
+  margin-right: 8px;
+}
+
+.widgetLogo svg {
+  width: 16px;
+  height: 16px;
 }
 
 .widgetTitleText {

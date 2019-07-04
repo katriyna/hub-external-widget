@@ -9,8 +9,19 @@ import Websandbox from 'websandbox';
 import CheckmarkIcon from '@jetbrains/icons/checkmark.svg';
 import WarningIcon from '@jetbrains/icons/warning-14px.svg';
 import ExceptionIcon from '@jetbrains/icons/exception.svg';
+import YouTrackIcon from '@jetbrains/logos/youtrack/youtrack.svg';
+import TeamCityIcon from '@jetbrains/logos/teamcity/teamcity.svg';
+import UpsourceIcon from '@jetbrains/logos/upsource/upsource.svg';
+import HubIcon from '@jetbrains/logos/hub/hub.svg';
 
 import style from './style.css';
+
+const SERVICE_ICONS = {
+  YouTrack: YouTrackIcon,
+  Upsource: UpsourceIcon,
+  TeamCity: TeamCityIcon,
+  Hub: HubIcon
+};
 
 let hubConfig;
 let auth;
@@ -45,9 +56,15 @@ export function init(installationProperties, config) {
   let services;
   let titleNode;
   let titleErrorNode;
+  let titleLogoNode;
   let containerNode;
 
-  return auth.init().then(renderWidgetNode);
+  return auth.init().then(renderWidgetNode).
+    then(loadWidgetManifest).
+    then(manifest => {
+      setLogo(manifest);
+      return manifest;
+    });
 
   /*--- End of script, functions declarations ---*/
 
@@ -92,6 +109,7 @@ export function init(installationProperties, config) {
     );
     titleNode = containerNode.querySelector(`.${style.widgetTitleTextPlaceholder}`);
     titleErrorNode = containerNode.querySelector(`.${style.widgetError}`);
+    titleLogoNode = containerNode.querySelector(`.${style.widgetLogo}`);
     const domContainer = typeof installationProperties.domContainer === 'string'
       ? document.querySelector(installationProperties.domContainer)
       : installationProperties.domContainer;
@@ -204,9 +222,11 @@ export function init(installationProperties, config) {
 
     const title = createEmptyDiv(style.widgetTitle);
     const titleText = createEmptyDiv(style.widgetTitleText);
+    const titleLogo = createEmptySpan(style.widgetLogo);
     const titleError = createEmptySpan(
       classNames(style.widgetError, iconStyles.red)
     );
+    titleText.appendChild(titleLogo);
     titleText.appendChild(titleError);
     titleText.appendChild(createEmptySpan(style.widgetTitleTextPlaceholder));
     title.appendChild(titleText);
@@ -278,6 +298,18 @@ export function init(installationProperties, config) {
 
   function clearError() {
     titleErrorNode.innerHTML = '';
+  }
+
+  function setLogo(manifest) {
+    const serviceName = manifest.applicationName;
+    if (SERVICE_ICONS[serviceName]) {
+      titleLogoNode.innerHTML = SERVICE_ICONS[serviceName];
+    }
+  }
+
+  async function loadWidgetManifest() {
+    const manifestUrl = `api/rest/widgets/${installationProperties.widgetName}/archive/manifest.json`;
+    return await fetchHub(manifestUrl);
   }
 
   function createEmptyDiv(className) {
