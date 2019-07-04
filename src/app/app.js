@@ -7,7 +7,7 @@ import iconStyles from '@jetbrains/ring-ui/components/icon/icon.css';
 import classNames from 'classnames';
 import Websandbox from 'websandbox';
 import CheckmarkIcon from '@jetbrains/icons/checkmark.svg';
-import WarningIcon from '@jetbrains/icons/warning.svg';
+import WarningIcon from '@jetbrains/icons/warning-14px.svg';
 import ExceptionIcon from '@jetbrains/icons/exception.svg';
 
 import style from './style.css';
@@ -44,6 +44,7 @@ export function init(installationProperties, config) {
 
   let services;
   let titleNode;
+  let titleErrorNode;
   let containerNode;
 
   return auth.init().then(renderWidgetNode);
@@ -89,7 +90,8 @@ export function init(installationProperties, config) {
       installationProperties.width || DEFAULT_WIDTH,
       installationProperties.height || DEFAULT_HEIGHT
     );
-    titleNode = containerNode.querySelector(`.${style.widgetTitleText}`);
+    titleNode = containerNode.querySelector(`.${style.widgetTitleTextPlaceholder}`);
+    titleErrorNode = containerNode.querySelector(`.${style.widgetError}`);
     const domContainer = typeof installationProperties.domContainer === 'string'
       ? document.querySelector(installationProperties.domContainer)
       : installationProperties.domContainer;
@@ -173,8 +175,8 @@ export function init(installationProperties, config) {
         alert('ExitConfigMode: Cannot manipulate with settings for widget in read-only mode', 'warning');
       },
 
-      setError: () => undefined,
-      clearError: () => undefined,
+      setError,
+      clearError,
 
       readCache: async () => undefined,
       storeCache: async () => undefined,
@@ -202,6 +204,11 @@ export function init(installationProperties, config) {
 
     const title = createEmptyDiv(style.widgetTitle);
     const titleText = createEmptyDiv(style.widgetTitleText);
+    const titleError = createEmptySpan(
+      classNames(style.widgetError, iconStyles.red)
+    );
+    titleText.appendChild(titleError);
+    titleText.appendChild(createEmptySpan(style.widgetTitleTextPlaceholder));
     title.appendChild(titleText);
 
     const body = createEmptyDiv(style.widgetBody);
@@ -211,12 +218,6 @@ export function init(installationProperties, config) {
     container.appendChild(createEmptyDiv(style.widgetLoader));
 
     return container;
-
-    function createEmptyDiv(className) {
-      const node = window.document.createElement('div');
-      node.className = className;
-      return node;
-    }
   }
 
   function createAlertContainerNode() {
@@ -230,21 +231,18 @@ export function init(installationProperties, config) {
   }
 
   function alert(text, type, displayTimeout) {
-    const alertNode = window.document.createElement('div');
-    alertNode.className = classNames({
+    const alertNode = createEmptyDiv(classNames({
       [alertStyles.alert]: true,
       [alertContainerStyles.alertInContainer]: true,
       [alertStyles.error]: type === 'error'
-    });
-    const alertNodeLabel = window.document.createElement('span');
-    alertNodeLabel.className = classNames(
-      alertStyles.caption, style.widgetAlertCaption
+    }));
+    const alertNodeLabel = createEmptySpan(
+      classNames(alertStyles.caption, style.widgetAlertCaption)
     );
     alertNodeLabel.innerText = text;
 
     if (type === 'warning' || type === 'error' || type === 'success') {
-      const iconNode = window.document.createElement('span');
-      iconNode.className = classNames(
+      const iconNode = createEmptySpan(classNames(
         alertStyles.icon,
         iconStyles.glyph,
         iconStyles.icon,
@@ -253,7 +251,7 @@ export function init(installationProperties, config) {
           [iconStyles.red]: type === 'error',
           [iconStyles.gray]: type === 'warning'
         }
-      );
+      ));
       iconNode.innerHTML = {
         warning: WarningIcon,
         error: ExceptionIcon,
@@ -269,5 +267,30 @@ export function init(installationProperties, config) {
     setInterval(() => {
       alertNode.className += ` ${alertStyles.animationClosing}`;
     }, displayTimeout || defaultDisplayTimeout);
+  }
+
+  function setError(err) {
+    if (err) {
+      titleErrorNode.innerHTML = WarningIcon;
+      titleErrorNode.title = err.data || err.message || '';
+    }
+  }
+
+  function clearError() {
+    titleErrorNode.innerHTML = '';
+  }
+
+  function createEmptyDiv(className) {
+    return createEmptyNode('div', className);
+  }
+
+  function createEmptySpan(className) {
+    return createEmptyNode('span', className);
+  }
+
+  function createEmptyNode(tagName, className) {
+    const node = window.document.createElement(tagName);
+    node.className = className;
+    return node;
   }
 }

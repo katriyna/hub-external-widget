@@ -17,6 +17,19 @@
   font-weight: 600;
 }
 
+.widgetError {
+  position: relative;
+  top: 3px;
+
+  margin-right: 2px;
+}
+
+.widgetError svg {
+  fill: var(--ring-icon-error-color);
+
+  color: var(--ring-icon-error-color);
+}
+
 .widgetTitleText {
   overflow: hidden;
 
@@ -31,6 +44,10 @@
   text-overflow: ellipsis;
 
   border-bottom: 1px solid var(--ring-line-color);
+}
+
+.widgetTitleTextPlaceholder {
+
 }
 
 .widgetBody {
