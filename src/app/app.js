@@ -59,9 +59,10 @@ export function init(installationProperties, config) {
   let titleLogoNode;
   let containerNode;
 
-  return auth.init().then(renderWidgetNode).
+  return auth.init().
     then(loadWidgetManifest).
     then(manifest => {
+      renderWidgetNode(manifest);
       setLogo(manifest);
       return manifest;
     });
@@ -102,7 +103,7 @@ export function init(installationProperties, config) {
   }
 
 
-  function renderWidgetNode() {
+  function renderWidgetNode(manifest) {
     containerNode = createWidgetsIFrameContainer(
       installationProperties.width || DEFAULT_WIDTH,
       installationProperties.height || DEFAULT_HEIGHT
@@ -115,11 +116,18 @@ export function init(installationProperties, config) {
       : installationProperties.domContainer;
     domContainer.appendChild(containerNode);
 
+    const {capabilities = {}} = manifest;
+    const sandboxAdditionalAttributes = [
+      'allow-pointer-lock',
+      capabilities.topNavigation && 'allow-top-navigation',
+      capabilities.popups && 'allow-popups allow-popups-to-escape-sandbox'
+    ].filter(it => !!it).join(' ');
+
     return Websandbox.create(getDashboardApi(), {
       frameClassName: style.widgetFrame,
       frameContainer: containerNode.querySelector(`.${style.widgetBody}`),
       frameSrc: `${installationProperties.hubBaseUrl}/api/rest/widgets/${installationProperties.widgetName}/archive/index.html?locale=${installationProperties.locale}&editable=false`,
-      sandboxAdditionalAttributes: 'allow-scripts allow-pointer-lock allow-top-navigation'
+      sandboxAdditionalAttributes
     });
   }
 
