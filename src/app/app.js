@@ -309,9 +309,13 @@ export function init(installationProperties, config) {
   }
 
   function setLogo(manifest) {
-    const serviceName = manifest.applicationName;
-    if (SERVICE_ICONS[serviceName]) {
-      titleLogoNode.innerHTML = SERVICE_ICONS[serviceName];
+    if (manifest.iconUrl) {
+      const img = new Image();
+      img.src = `${installationProperties.hubBaseUrl}/api/rest/widgets/${installationProperties.widgetName}/archive/${manifest.iconUrl}`;
+      img.width = 16;
+      titleLogoNode.append(img);
+    } else if (SERVICE_ICONS[manifest.applicationName]) {
+      titleLogoNode.innerHTML = SERVICE_ICONS[manifest.applicationName];
     }
   }
 
