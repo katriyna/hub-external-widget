@@ -8,6 +8,7 @@ import classNames from 'classnames';
 import Websandbox from 'websandbox';
 import CheckmarkIcon from '@jetbrains/icons/checkmark.svg';
 import WarningIcon from '@jetbrains/icons/warning-14px.svg';
+import UpdateIcon from '@jetbrains/icons/update.svg';
 import ExceptionIcon from '@jetbrains/icons/exception.svg';
 import YouTrackIcon from '@jetbrains/logos/youtrack/youtrack.svg';
 import TeamCityIcon from '@jetbrains/logos/teamcity/teamcity.svg';
@@ -55,16 +56,20 @@ export function init(installationProperties, config) {
 
   let services;
   let titleNode;
+  let titleTextNode;
   let titleErrorNode;
   let titleLogoNode;
   let containerNode;
 
   return auth.init().
-    then(loadWidgetManifest).
-    then(manifest => {
-      renderWidgetNode(manifest);
-      setLogo(manifest);
-      return manifest;
+    then(() => loadWidgetManifest()).
+    then(manifest => renderWidgetNode(manifest)).
+    then(widgetApi => {
+      debugger;
+      if (widgetApi.onRefresh) {
+        renderWidgetRefreshControl(widgetApi.onRefresh);
+      }
+      return widgetApi;
     });
 
   /*--- End of script, functions declarations ---*/
@@ -108,13 +113,16 @@ export function init(installationProperties, config) {
       installationProperties.width || DEFAULT_WIDTH,
       installationProperties.height || DEFAULT_HEIGHT
     );
-    titleNode = containerNode.querySelector(`.${style.widgetTitleTextPlaceholder}`);
-    titleErrorNode = containerNode.querySelector(`.${style.widgetError}`);
-    titleLogoNode = containerNode.querySelector(`.${style.widgetLogo}`);
+    titleNode = containerNode.querySelector(`.${style.widgetTitle}`);
+    titleTextNode = titleNode.querySelector(`.${style.widgetTitleTextPlaceholder}`);
+    titleErrorNode = titleNode.querySelector(`.${style.widgetError}`);
+    titleLogoNode = titleNode.querySelector(`.${style.widgetLogo}`);
     const domContainer = typeof installationProperties.domContainer === 'string'
       ? document.querySelector(installationProperties.domContainer)
       : installationProperties.domContainer;
     domContainer.appendChild(containerNode);
+
+    setLogo(manifest);
 
     const {capabilities = {}} = manifest;
     const sandboxAdditionalAttributes = [
@@ -123,12 +131,21 @@ export function init(installationProperties, config) {
       capabilities.popups && 'allow-popups allow-popups-to-escape-sandbox'
     ].filter(it => !!it).join(' ');
 
-    return Websandbox.create(getDashboardApi(), {
+    const sandbox = Websandbox.create(getDashboardApi(), {
       frameClassName: style.widgetFrame,
       frameContainer: containerNode.querySelector(`.${style.widgetBody}`),
       frameSrc: `${installationProperties.hubBaseUrl}/api/rest/widgets/${installationProperties.widgetName}/archive/index.html?locale=${installationProperties.locale}&editable=false`,
       sandboxAdditionalAttributes
     });
+
+    return sandbox.connection.remoteMethodsWaitPromise.
+      then(() => (sandbox.connection.remote || {}));
+  }
+
+  function renderWidgetRefreshControl(onRefresh) {
+    const updateIconPlaceholder = createEmptySpan(style.updateIcon);
+    updateIconPlaceholder.innerHTML = UpdateIcon;
+    titleNode.appendChild(updateIconPlaceholder);
   }
 
   function makeHubConfig(installationProps) {
@@ -174,7 +191,7 @@ export function init(installationProperties, config) {
   function getDashboardApi() {
     return {
       setTitle: (text, url) => {
-        titleNode.innerHTML = '';
+        titleTextNode.innerHTML = '';
 
         if (url) {
           const link = window.document.createElement('a');
@@ -182,9 +199,9 @@ export function init(installationProperties, config) {
           link.target = '_blank';
           link.innerText = text;
           link.className = linkStyles.link;
-          titleNode.appendChild(link);
+          titleTextNode.appendChild(link);
         } else {
-          titleNode.innerText = text;
+          titleTextNode.innerText = text;
         }
       },
 
