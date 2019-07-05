@@ -59,15 +59,15 @@ export function init(installationProperties, config) {
   let titleTextNode;
   let titleErrorNode;
   let titleLogoNode;
+  let refreshControlNode;
   let containerNode;
 
   return auth.init().
     then(() => loadWidgetManifest()).
     then(manifest => renderWidgetNode(manifest)).
     then(widgetApi => {
-      debugger;
       if (widgetApi.onRefresh) {
-        renderWidgetRefreshControl(widgetApi.onRefresh);
+        enableWidgetRefreshControl(widgetApi.onRefresh);
       }
       return widgetApi;
     });
@@ -117,6 +117,7 @@ export function init(installationProperties, config) {
     titleTextNode = titleNode.querySelector(`.${style.widgetTitleTextPlaceholder}`);
     titleErrorNode = titleNode.querySelector(`.${style.widgetError}`);
     titleLogoNode = titleNode.querySelector(`.${style.widgetLogo}`);
+    refreshControlNode = titleNode.querySelector(`.${style.widgetRefreshControl}`);
     const domContainer = typeof installationProperties.domContainer === 'string'
       ? document.querySelector(installationProperties.domContainer)
       : installationProperties.domContainer;
@@ -142,10 +143,11 @@ export function init(installationProperties, config) {
       then(() => (sandbox.connection.remote || {}));
   }
 
-  function renderWidgetRefreshControl(onRefresh) {
-    const updateIconPlaceholder = createEmptySpan(style.updateIcon);
-    updateIconPlaceholder.innerHTML = UpdateIcon;
-    titleNode.appendChild(updateIconPlaceholder);
+  function enableWidgetRefreshControl(onRefresh) {
+    refreshControlNode.className = classNames(
+      style.widgetRefreshControl, style.widgetRefreshControlActive
+    );
+    refreshControlNode.addEventListener('click', () => onRefresh());
   }
 
   function makeHubConfig(installationProps) {
@@ -206,9 +208,24 @@ export function init(installationProperties, config) {
       },
 
       setLoadingAnimationEnabled: isLoading => {
-        containerNode.className = isLoading
-          ? [style.widgetWrapper, style.widgetWrapperLoading].join(' ')
-          : style.widgetWrapper;
+        containerNode.className = classNames({
+          [style.widgetWrapper]: true,
+          [style.widgetWrapperLoading]: isLoading
+        });
+
+        if (isActiveRefreshControlNode()) {
+          refreshControlNode.className = classNames({
+            [style.widgetRefreshControl]: true,
+            [style.widgetRefreshControlActive]: true,
+            [style.widgetRefreshControlLoading]: isLoading
+          });
+        }
+
+        function isActiveRefreshControlNode() {
+          return refreshControlNode.className.indexOf(
+            style.widgetRefreshControlActive
+          ) > -1;
+        }
       },
 
       enterConfigMode: () => {
@@ -255,6 +272,10 @@ export function init(installationProperties, config) {
     titleText.appendChild(titleError);
     titleText.appendChild(createEmptySpan(style.widgetTitleTextPlaceholder));
     title.appendChild(titleText);
+
+    const updateIconPlaceholder = createEmptySpan(style.widgetRefreshControl);
+    updateIconPlaceholder.innerHTML = UpdateIcon;
+    title.appendChild(updateIconPlaceholder);
 
     const body = createEmptyDiv(style.widgetBody);
     body.style.height = `${height}px`;
